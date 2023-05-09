@@ -1,0 +1,75 @@
+import random
+import math
+
+class KDNode:
+    def __init__(self, point, split_dim, data=None, left=None, right=None):
+        self.point = point
+        self.split_dim = split_dim
+        self.data = data
+        self.left = left
+        self.right = right
+
+class KDTree:
+    def __init__(self, data=None):
+        self.root = None
+        if data:
+            self.build(data)
+    
+    def build(self, data):
+        def recursive_build(points, split_dim):
+            if not points:
+                return None
+            
+            points.sort(key=lambda x: x[0][split_dim])
+            mid = len(points) // 2
+            node = KDNode(points[mid][0], split_dim, points[mid][1])
+            
+            node.left = recursive_build(points[:mid], (split_dim + 1) % len(points[0][0]))
+            node.right = recursive_build(points[mid+1:], (split_dim + 1) % len(points[0][0]))
+            
+            return node
+        
+        self.root = recursive_build(data, 0)
+    
+    def find_closest_node(self, point):
+        closest_node = None
+        min_dist = math.inf
+        
+        def traverse(node):
+            nonlocal closest_node, min_dist
+            
+            if node is None:
+                return
+            
+            dist = distance(point, node.point)
+            
+            if dist < min_dist:
+                closest_node = node
+                min_dist = dist
+            
+            if point[node.split_dim] < node.point[node.split_dim]:
+                traverse(node.left)
+                if (point[node.split_dim] - min_dist) <= node.point[node.split_dim]:
+                    traverse(node.right)
+            else:
+                traverse(node.right)
+                if (point[node.split_dim] + min_dist) >= node.point[node.split_dim]:
+                    traverse(node.left)
+        
+        traverse(self.root)
+        return closest_node
+    
+def distance(p1, p2):
+    return math.sqrt(sum([(p1[i]-p2[i])**2 for i in range(len(p1))]))
+
+
+if __name__ == "__main__":
+    data = [((random.uniform(0, 10), random.uniform(0, 10)), random.randint(0, 9)) for i in range(10)]
+    
+    tree = KDTree(data)
+    
+    query_point = (5, 5)
+    closest_node = tree.find_closest_node(query_point)
+    print("Query point:", query_point)
+    print("Closest point:", closest_node.point)
+    print("Data associated with closest point:", closest_node.data)
