@@ -1,0 +1,83 @@
+import numpy as np
+
+
+class KDNode:
+    def __init__(self, point, split_dim=None, left=None, right=None):
+        self.point = point
+        self.split_dim = split_dim
+        self.left = left
+        self.right = right
+
+
+class KDTree:
+    def __init__(self, data):
+        self.root = self._build_tree(data)
+
+    def _build_tree(self, data, depth=0):
+        if data.shape[0] == 0:
+            return None
+
+        num_points, num_dims = data.shape
+        split_dim = depth % num_dims
+        sorted_indices = np.argsort(data[:, split_dim])
+        mid = num_points // 2
+
+        return KDNode(
+            point=data[sorted_indices[mid]],
+            split_dim=split_dim,
+            left=self._build_tree(data[sorted_indices[:mid]], depth + 1),
+            right=self._build_tree(data[sorted_indices[mid + 1 :]], depth + 1),
+        )
+
+    def nearest_neighbor(self, query_point):
+        best_point, best_dist = self._search(self.root, query_point, float("inf"))
+        return best_point
+
+    def _search(self, node, query_point, best_dist):
+        if node is None:
+            return None, best_dist
+
+        dist = self._euclidean_dist(node.point, query_point)
+        if dist < best_dist:
+            best_point, best_dist = node.point, dist
+        else:
+            best_point = None
+
+        split_val = node.point[node.split_dim]
+        if query_point[node.split_dim] < split_val:
+            near_node = node.left
+            far_node = node.right
+        else:
+            near_node = node.right
+            far_node = node.left
+
+        near_best, near_best_dist = self._search(near_node, query_point, best_dist)
+
+        if near_best_dist < best_dist:
+            best_point, best_dist = near_best, near_best_dist
+
+        if abs(query_point[node.split_dim] - split_val) < best_dist:
+            far_best, far_best_dist = self._search(far_node, query_point, best_dist)
+
+            if far_best_dist < best_dist:
+                best_point, best_dist = far_best, far_best_dist
+
+        return best_point, best_dist
+
+    @staticmethod
+    def _euclidean_dist(a, b):
+        return np.linalg.norm(a - b)
+
+
+# Generate some random data
+data = np.random.rand(100, 3)
+
+# Build a KD tree from the data
+tree = KDTree(data)
+
+# Query for the nearest neighbor to a random point
+query_point = np.random.rand(3)
+nearest_neighbor = tree.nearest_neighbor(query_point)
+
+print("Query point: ", query_point)
+print("Nearest neighbor: ", nearest_neighbor)
