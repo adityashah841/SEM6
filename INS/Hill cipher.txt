@@ -1,0 +1,33 @@
+import numpy as np
+
+def to_mat(l):
+  mat=[]
+  for i in range(0,len(l),3):
+    mat.append(l[i:i+3])
+  return mat
+
+pt = input("Enter the plaintext: ").lower()
+key = input("Enter a 9 character key: ").lower()
+k = [ord(i)-97 for i in key]
+kmat = to_mat(k)
+if len(pt)%3==1:
+  pt+='xx'
+elif len(pt)%3==2:
+  pt+='x'
+pt_mat = to_mat(pt)
+pt_mat = [list(i) for i in pt_mat]
+for i in range(len(pt_mat)):
+  pt_mat[i] = [ord(j)-97 for j in pt_mat[i]]
+pt_mat = np.array(pt_mat)
+pt_mat = pt_mat.transpose()
+ct_mat = np.matmul(np.array(kmat), pt_mat)
+for i in range(len(ct_mat)):
+  ct_mat[i] = [j%26 for j in ct_mat[i]]
+ct_mat = ct_mat.transpose()
+ct_mat = list(ct_mat)
+for i in range(len(ct_mat)):
+  ct_mat[i] = [chr(j+97) for j in ct_mat[i]]
+ct=''
+for i in ct_mat:
+  ct = ct+''.join(i)
+print(ct)
