@@ -1,0 +1,23 @@
+def mul_inv(x,y):
+  for i in range(1, y):
+    if i*x%y==1:
+      return i
+
+def encrypt(msg, a, b):
+  ct=[]
+  for c in msg:
+    ct.append(chr((a*(ord(c)-97)+b)%26 + 97))
+  return ''.join(ct)
+
+def decrypt(ct, a, b):
+  a_in = mul_inv(a,26)
+  pt=[]
+  for c in ct:
+    pt.append(chr((a_in*(ord(c)-97-b))%26+97))
+  return ''.join(pt)
+
+pt=input("Enter plaintext: ").lower()
+a,b=map(int, input("Enter a and b: ").split())
+ct = encrypt(pt,a,b)
+print(ct)
+print(decrypt(ct, a, b))
